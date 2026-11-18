@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connected AI Parts Assistant · AGCO Prototype</title>
+<meta name="description" content="Working prototype of the Connected AI Parts Assistant — a proposed AI-enabled farmer parts request journey for AGCO. TCU INSC 20263, Team Tantalizing Table Two." />
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c4161c'/%3E%3Cpath d='M8 21l5-10 4 7 3-4 4 7' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+:root{
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.25rem; --text-xl:clamp(1.5rem,1.1rem + 1.4vw,2.25rem); --text-hero:clamp(2rem,1.2rem + 3.2vw,3.75rem);
+  --bg:#f5f4f0; --surface:#ffffff; --surface-2:#faf9f6; --sunken:#efede7; --border:#e2dfd7; --border-strong:#cfcbc0;
+  --ink:#17191b; --ink-2:#3d4146; --muted:#6c7075; --faint:#9a9da1;
+  --brand:#c4161c; --brand-hover:#a31217; --brand-soft:#fbe9e9; --brand-ink:#8f1015;
+  --nav:#141618; --nav-2:#202326;
+  --ok:#1d7a3e; --ok-soft:#e5f3ea; --warn:#9a5a00; --warn-soft:#fbf0dc; --err:#b42318; --err-soft:#fdecea;
+  --conn:#0d6b72; --conn-soft:#e1f1f2; --ai:#5b3fb5; --ai-soft:#efebfb; --erp:#2f5597; --erp-soft:#e8eef9;
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px;
+  --sh-sm:0 1px 2px rgba(20,22,24,.06); --sh-md:0 6px 20px -6px rgba(20,22,24,.12),0 2px 6px rgba(20,22,24,.05); --sh-lg:0 24px 60px -18px rgba(20,22,24,.35);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --f-body:'Satoshi',system-ui,sans-serif; --f-display:'Cabinet Grotesk','Satoshi',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:none;scroll-behavior:smooth}
+body{font-family:var(--f-body);font-size:var(--text-base);line-height:1.55;color:var(--ink);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:var(--r-sm)}
+.tnum{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- Top nav ---------- */
+.nav{position:sticky;top:0;z-index:40;background:var(--nav);color:#fff;border-bottom:1px solid #000}
+.nav-in{max-width:1280px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--brand);display:grid;place-items:center}
+.brand-name{font-family:var(--f-display);font-weight:800;font-size:1.05rem;letter-spacing:-.01em;line-height:1.1}
+.brand-name small{display:block;font-family:var(--f-body);font-weight:500;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#a6abb0}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tab{height:36px;padding:0 14px;border-radius:8px;font-size:var(--text-sm);font-weight:500;color:#c3c7cb;display:flex;align-items:center;gap:8px;transition:background .18s var(--ease),color .18s var(--ease)}
+.tab:hover{background:var(--nav-2);color:#fff}
+.tab.active{background:#2b2f33;color:#fff;font-weight:700}
+.tab svg{opacity:.85}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.chip-sim{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f3c77a;border:1px solid #5a4a26;background:#2a2417;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.btn-ghost-dark{height:32px;padding:0 12px;border-radius:8px;border:1px solid #33373b;color:#d9dcdf;font-size:var(--text-xs);font-weight:700;white-space:nowrap}
+.btn-ghost-dark:hover{background:var(--nav-2);color:#fff}
+@media (max-width:860px){.nav-in{height:auto;flex-wrap:wrap;padding:10px 16px;gap:10px}.tabs{order:3;width:100%;margin:0;overflow-x:auto}.tab{flex:1;justify-content:center;white-space:nowrap}.chip-sim{display:none}}
+
+.view{display:none}
+.view.active{display:block;animation:in .35s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.container{max-width:1280px;margin:0 auto;padding:28px 20px 56px}
+
+/* ---------- Generic ---------- */
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+.h-display{font-family:var(--f-display);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.h2{font-family:var(--f-display);font-size:var(--text-xl);font-weight:800;letter-spacing:-.015em;line-height:1.1}
+.h3{font-family:var(--f-display);font-size:var(--text-lg);font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.lead{color:var(--muted);font-size:1.0625rem;max-width:62ch}
+.muted{color:var(--muted)}
+.small{font-size:var(--text-sm)}
+.xs{font-size:var(--text-xs)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)}
+.pad{padding:22px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:10px;font-size:var(--text-sm);font-weight:700;transition:background .18s var(--ease),transform .12s var(--ease),box-shadow .18s var(--ease);white-space:nowrap}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.15) inset,0 2px 6px rgba(196,22,28,.25)}
+.btn-primary:hover:not(:disabled){background:var(--brand-hover)}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:hover:not(:disabled){background:#000}
+.btn-outline{background:var(--surface);border:1px solid var(--border-strong);color:var(--ink)}
+.btn-outline:hover:not(:disabled){border-color:var(--ink-2)}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover:not(:disabled){background:#15612f}
+.btn-warn{background:var(--surface);color:var(--warn);border:1px solid #e8c98d}.btn-warn:hover:not(:disabled){background:var(--warn-soft)}
+.btn-erp{background:var(--erp);color:#fff}.btn-erp:hover:not(:disabled){background:#244579}
+.btn:disabled{background:var(--sunken);color:var(--faint);border:1px solid var(--border);box-shadow:none;cursor:not-allowed}
+.btn-block{width:100%}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.pill-ok{background:var(--ok-soft);color:var(--ok)}
+.pill-warn{background:var(--warn-soft);color:var(--warn)}
+.pill-err{background:var(--err-soft);color:var(--err)}
+.pill-conn{background:var(--conn-soft);color:var(--conn)}
+.pill-ai{background:var(--ai-soft);color:var(--ai)}
+.pill-erp{background:var(--erp-soft);color:var(--erp)}
+.pill-brand{background:var(--brand-soft);color:var(--brand-ink)}
+.pill-neutral{background:var(--sunken);color:var(--ink-2)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ---------- Overview ---------- */
+.hero{position:relative;border-radius:var(--r-xl);overflow:hidden;min-height:440px;display:flex;align-items:flex-end;color:#fff;box-shadow:var(--sh-md);background:#2a1d14}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,13,14,.88) 0%,rgba(12,13,14,.62) 45%,rgba(12,13,14,.05) 85%),linear-gradient(0deg,rgba(12,13,14,.55),transparent 40%)}
+.hero-in{position:relative;z-index:1;padding:44px;max-width:680px}
+.hero .eyebrow{color:#ffb4a8}
+.hero h1{font-size:var(--text-hero);margin:12px 0 16px}
+.hero p{color:#dcdfe2;font-size:1.0625rem;max-width:54ch}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.hero .btn-outline{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.35);backdrop-filter:blur(6px)}
+.hero .btn-outline:hover{background:rgba(255,255,255,.16);border-color:#fff}
+.hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:28px;font-size:var(--text-xs);color:#b9bec3}
+.hero-meta strong{color:#fff;font-weight:700}
+@media (max-width:640px){.hero-in{padding:26px}.hero{min-height:520px}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.stat{padding:18px 20px}
+.stat .v{font-family:var(--f-display);font-weight:800;font-size:1.85rem;letter-spacing:-.02em;line-height:1}
+.stat .k{font-size:var(--text-sm);color:var(--muted);margin-top:8px;line-height:1.4}
+.stat .src{font-size:.7rem;color:var(--faint);margin-top:6px}
+@media (max-width:900px){.stats{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.stats{grid-template-columns:1fr}}
+
+.section{margin-top:56px}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.section-head .lead{margin-top:8px}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.compare{grid-template-columns:1fr}}
+.compare .card{padding:24px}
+.compare-label{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.flow{list-style:none;display:flex;flex-direction:column;gap:0}
+.flow li{position:relative;padding:0 0 18px 34px}
+.flow li:last-child{padding-bottom:0}
+.flow li::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--border)}
+.flow li:last-child::before{display:none}
+.flow .n{position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800}
+.flow.asis .n{background:var(--sunken);color:var(--ink-2)}
+.flow.tobe .n{background:var(--brand);color:#fff}
+.flow strong{display:block;font-size:.95rem}
+.flow span{display:block;font-size:var(--text-sm);color:var(--muted)}
+.flow .bad{color:var(--err);font-weight:700}
+.flow .good{color:var(--ok);font-weight:700}
+
+.components{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.components{grid-template-columns:1fr}}
+.comp{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.comp-vis{height:150px;position:relative;overflow:hidden;background:var(--sunken)}
+.comp-vis img{width:100%;height:100%;object-fit:cover}
+.comp-vis .ov{position:absolute;inset:0;display:flex;align-items:flex-end;padding:12px;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent 60%)}
+.comp-body{padding:20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.comp-letter{font-family:var(--f-display);font-weight:800;color:var(--brand);font-size:.85rem;letter-spacing:.06em}
+.comp-body p{font-size:var(--text-sm);color:var(--muted)}
+.comp-solves{margin-top:auto;padding-top:12px;border-top:1px dashed var(--border);font-size:var(--text-xs);color:var(--ink-2)}
+.comp-solves b{color:var(--ink)}
+.fault-vis{height:100%;background:linear-gradient(135deg,#0b3e43,#0d6b72);display:flex;flex-direction:column;justify-content:center;padding:18px;color:#fff;gap:8px}
+.fault-vis .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:4px 8px;border-radius:6px;width:fit-content}
+.fault-vis .sig{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem}
+.avail-vis{height:100%;background:linear-gradient(135deg,#1d3c70,#2f5597);display:flex;flex-direction:column;justify-content:center;gap:10px;padding:18px;color:#fff}
+.avail-row{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px}
+
+.split{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.levels{display:flex;flex-direction:column;gap:10px}
+.level{display:grid;grid-template-columns:140px 1fr;gap:16px;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface-2);align-items:start}
+.level .who{font-size:var(--text-xs);color:var(--muted);margin-top:4px}
+.level p{font-size:var(--text-sm);color:var(--ink-2)}
+@media (max-width:560px){.level{grid-template-columns:1fr;gap:6px}}
+.arch{display:flex;flex-direction:column;gap:10px}
+.arch-zone{border-radius:var(--r-md);padding:14px 16px;border:1px solid}
+.arch-zone.pub{background:var(--ai-soft);border-color:#d9d0f5}
+.arch-zone.priv{background:var(--erp-soft);border-color:#cbd8f0}
+.arch-zone h4{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.arch-zone.pub h4{color:var(--ai)}.arch-zone.priv h4{color:var(--erp)}
+.arch-chips{display:flex;flex-wrap:wrap;gap:6px}
+.arch-chips span{background:#fff;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:.78rem;font-weight:500}
+.arch-link{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.75rem;font-weight:700;color:var(--ink-2)}
+.arch-link::before,.arch-link::after{content:'';height:1px;flex:1;background:var(--border-strong)}
+
+.roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.roadmap::before{content:'';position:absolute;top:15px;left:16px;right:16px;height:2px;background:var(--border)}
+.phase{position:relative;padding:0 14px 0 0}
+.phase .dot-n{width:32px;height:32px;border-radius:50%;background:var(--surface);border:2px solid var(--brand);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:.8rem;position:relative;z-index:1}
+.phase.first .dot-n{background:var(--brand);color:#fff}
+.phase .when{font-size:var(--text-xs);color:var(--brand);font-weight:700;margin-top:14px;letter-spacing:.04em;text-transform:uppercase}
+.phase h4{font-family:var(--f-display);font-size:1.05rem;font-weight:700;margin:4px 0 6px}
+.phase p{font-size:var(--text-sm);color:var(--muted)}
+@media (max-width:900px){.roadmap{grid-template-columns:1fr;gap:22px}.roadmap::before{top:16px;bottom:16px;left:15px;right:auto;width:2px;height:auto}.phase{padding-left:48px}.phase .dot-n{position:absolute;left:0;top:0}.phase .when{margin-top:4px}}
+.gates{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px}
+.gate{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--text-sm)}
+.gate svg{flex-shrink:0;color:var(--ok);margin-top:2px}
+@media (max-width:900px){.gates{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.gates{grid-template-columns:1fr}}
+
+.money-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.money-grid{grid-template-columns:1fr}}
+.cost-row{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);font-size:var(--text-sm)}
+.cost-row:last-child{border-bottom:none}
+.cost-row.total{font-weight:800;font-size:1rem;border-top:2px solid var(--ink);border-bottom:none;margin-top:4px;padding-top:12px}
+.bigfig{font-family:var(--f-display);font-size:3rem;font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--ok)}
+.bench{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+.bench th,.bench td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.bench th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--surface-2)}
+.bench td:first-child{font-weight:700}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--err);font-weight:700}.part{color:var(--warn);font-weight:700}
+.scroll-x{overflow-x:auto}
+.sources{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.src-link{display:block;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);text-decoration:none;color:var(--ink);transition:border-color .18s var(--ease)}
+.src-link:hover{border-color:var(--brand)}
+.src-link b{display:block;font-size:var(--text-sm)}
+.src-link span{font-size:var(--text-xs);color:var(--muted)}
+.team{display:flex;gap:10px;flex-wrap:wrap}
+.member{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:var(--text-sm);font-weight:700}
+.member .av{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:.72rem}
+
+/* ---------- Farmer view ---------- */
+.farmer-layout{display:grid;grid-template-columns:400px 1fr;gap:32px;align-items:start}
+@media (max-width:980px){.farmer-layout{grid-template-columns:minmax(0,1fr)}}
+.farmer-layout>*{min-width:0}
+.phone-wrap{position:sticky;top:84px;display:flex;justify-content:center}
+@media (max-width:980px){.phone-wrap{position:static}}
+.phone{width:375px;max-width:100%;height:760px;background:#0d0e0f;border-radius:52px;padding:12px;box-shadow:var(--sh-lg),0 0 0 1px #2c2f33 inset}
+.screen{position:relative;width:100%;height:100%;background:var(--bg);border-radius:41px;overflow:hidden;display:flex;flex-direction:column}
+.status-bar{height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 30px;font-size:.8rem;font-weight:700;background:var(--surface)}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#0d0e0f;border-radius:20px;z-index:3}
+.sb-icons{display:flex;gap:5px;align-items:center}
+.app-head{background:var(--surface);padding:6px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.app-head .row{display:flex;justify-content:space-between;align-items:center}
+.app-title{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+.app-sub{font-size:.78rem;color:var(--muted)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}
+.app-body{flex:1;overflow-y:auto;padding:14px 14px 20px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.app-body::-webkit-scrollbar{display:none}
+.tabbar{flex-shrink:0;height:74px;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 10px 18px}
+.tb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.68rem;font-weight:700;color:var(--faint);position:relative}
+.tb.active{color:var(--brand)}
+.tb .badge{position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;border-radius:8px;background:var(--brand);color:#fff;font-size:.6rem;display:grid;place-items:center;padding:0 4px}
+.scan-fab{width:46px;height:46px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;margin-top:-22px;box-shadow:0 6px 14px rgba(196,22,28,.35);border:4px solid var(--surface)}
+.tb.active .scan-fab{background:var(--brand-hover)}
+
+.m-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px}
+.machine{display:flex;gap:12px;align-items:center}
+.machine-img{width:64px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--sunken)}
+.machine-img img{width:100%;height:100%;object-fit:cover}
+.machine .nm{font-weight:800;font-size:.92rem}
+.machine .meta{font-size:.72rem;color:var(--muted)}
+.conn-dot{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:var(--ok)}
+.conn-dot i{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(29,122,62,.18)}
+.alert-card{background:linear-gradient(160deg,#0b3e43,#0d6b72);color:#fff;border:none;position:relative;overflow:hidden}
+.alert-card .tag{display:inline-flex;align-items:center;gap:6px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9fe3e8}
+.alert-card .tag i{width:7px;height:7px;border-radius:50%;background:#ff7a6b;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,122,107,.6)}70%{box-shadow:0 0 0 8px rgba(255,122,107,0)}100%{box-shadow:0 0 0 0 rgba(255,122,107,0)}}
+.alert-card h4{font-size:1rem;font-weight:800;margin:8px 0 4px}
+.alert-card p{font-size:.78rem;color:#cfe9eb;line-height:1.45}
+.alert-part{margin-top:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.alert-part b{font-size:.85rem;display:block}
+.alert-part span{font-size:.7rem;color:#b8dfe2}
+.alert-part .conf-mini{font-weight:800;font-size:.8rem;color:#8ef0b0;white-space:nowrap}
+.alert-card .btn{margin-top:12px;height:40px;background:#fff;color:#0b3e43;width:100%}
+.alert-card .btn:hover:not(:disabled){background:#e9f6f7}
+.alert-card .btn:disabled{background:rgba(255,255,255,.18);color:#d6eef0;border:none}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick button{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color .18s var(--ease)}
+.quick button:hover{border-color:var(--brand)}
+.quick .qi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.quick b{font-size:.82rem}
+.quick span{font-size:.7rem;color:var(--muted);line-height:1.3}
+.sec-title{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:4px 2px 0}
+
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph-opt{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;border:3px solid transparent;transition:border-color .18s var(--ease),transform .18s var(--ease)}
+.ph-opt img{width:100%;height:100%;object-fit:cover}
+.ph-opt .cap{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;font-size:.68rem;font-weight:700;color:#fff;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);text-align:left;line-height:1.25}
+.ph-opt.sel{border-color:var(--brand)}
+.ph-opt.sel::after{content:'';position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.field .inp{height:40px;border:1px solid var(--border-strong);border-radius:10px;padding:0 12px;background:var(--surface);font-size:.85rem;display:flex;align-items:center;justify-content:space-between}
+.field .inp .ok{font-size:.7rem;color:var(--ok);font-weight:700}
+.scan-stage{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:#000}
+.scan-stage img{width:100%;height:100%;object-fit:cover;opacity:.85}
+.scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ff6b5e,transparent);box-shadow:0 0 16px #ff6b5e;animation:scan 1.1s ease-in-out infinite alternate}
+@keyframes scan{from{top:8%}to{top:90%}}
+.scan-corners{position:absolute;inset:14px;border-radius:10px;background:
+ linear-gradient(#fff,#fff) top left/22px 3px no-repeat,linear-gradient(#fff,#fff) top left/3px 22px no-repeat,
+ linear-gradient(#fff,#fff) top right/22px 3px no-repeat,linear-gradient(#fff,#fff) top right/3px 22px no-repeat,
+ linear-gradient(#fff,#fff) bottom left/22px 3px no-repeat,linear-gradient(#fff,#fff) bottom left/3px 22px no-repeat,
+ linear-gradient(#fff,#fff) bottom right/22px 3px no-repeat,linear-gradient(#fff,#fff) bottom right/3px 22px no-repeat}
+.scan-label{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);color:#fff;font-size:.74rem;font-weight:700;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.result{display:flex;flex-direction:column;gap:10px;animation:in .4s var(--ease)}
+.res-head{display:flex;gap:12px;align-items:center}
+.ring{position:relative;width:64px;height:64px;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:.9rem}
+.ring circle{transition:stroke-dashoffset .9s var(--ease)}
+.res-head .nm{font-weight:800;font-size:.95rem;line-height:1.25}
+.res-head .no{font-size:.72rem;color:var(--muted)}
+.res-price{font-family:var(--f-display);font-weight:800;font-size:1.05rem}
+.stock-line{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;padding:8px 0;border-top:1px solid var(--border)}
+.stock-line:first-child{border-top:none}
+.stock-line .l{display:flex;align-items:center;gap:8px}
+.stock-line .l i{width:8px;height:8px;border-radius:50%}
+.note-warn{background:var(--warn-soft);color:#6f4200;border:1px solid #efd7a8;border-radius:12px;padding:10px 12px;font-size:.76rem;line-height:1.45}
+.note-ok{background:var(--ok-soft);color:#14532b;border:1px solid #c4e4cf;border-radius:12px;padding:10px 12px;font-size:.76rem;line-height:1.45}
+.order-card{display:flex;flex-direction:column;gap:8px}
+.order-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.order-top b{font-size:.86rem;line-height:1.3;display:block}
+.order-top span{font-size:.7rem;color:var(--muted)}
+.order-thumb{width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--sunken);display:grid;place-items:center}
+.order-thumb img{width:100%;height:100%;object-fit:cover}
+.progress{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.progress i{height:4px;border-radius:2px;background:var(--sunken)}
+.progress i.on{background:var(--ok)}
+.progress.warn i.on{background:var(--warn)}
+.progress-l{display:flex;justify-content:space-between;font-size:.62rem;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.mini-tl{display:flex;flex-direction:column;gap:6px;border-left:2px solid var(--border);margin-left:4px;padding-left:12px}
+.mini-tl div{font-size:.72rem;color:var(--ink-2);position:relative}
+.mini-tl div::before{content:'';position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--border-strong)}
+.mini-tl div.hl{color:var(--conn);font-weight:700}
+.mini-tl div.hl::before{background:var(--conn)}
+.mini-tl time{display:block;font-size:.64rem;color:var(--faint);font-weight:500}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:.8rem}
+.push{position:absolute;top:52px;left:10px;right:10px;z-index:5;background:rgba(250,250,250,.94);backdrop-filter:blur(12px);border-radius:18px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;gap:10px;align-items:flex-start;transform:translateY(-220%);opacity:0;transition:transform .45s var(--ease),opacity .3s var(--ease)}
+.push.show{transform:none;opacity:1}
+.push .pi{width:32px;height:32px;border-radius:8px;background:var(--brand);display:grid;place-items:center;flex-shrink:0}
+.push b{font-size:.76rem;display:block}
+.push p{font-size:.74rem;color:var(--ink-2);line-height:1.35}
+.push small{font-size:.64rem;color:var(--faint);margin-left:auto;white-space:nowrap}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.side-head h2{margin:6px 0 8px}
+.guide{list-style:none;display:flex;flex-direction:column;gap:2px}
+.guide li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:var(--r-md);transition:background .2s var(--ease)}
+.guide li .gn{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-strong);display:grid;place-items:center;font-size:.72rem;font-weight:800;color:var(--muted);flex-shrink:0;transition:all .2s var(--ease)}
+.guide li.cur{background:var(--brand-soft)}
+.guide li.cur .gn{border-color:var(--brand);color:var(--brand)}
+.guide li.done .gn{background:var(--ok);border-color:var(--ok);color:#fff}
+.guide li b{font-size:var(--text-sm);display:block}
+.guide li span{font-size:var(--text-xs);color:var(--muted)}
+.feed-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ok)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse2 1.6s infinite}
+@keyframes pulse2{0%{box-shadow:0 0 0 0 rgba(29,122,62,.5)}70%{box-shadow:0 0 0 7px rgba(29,122,62,0)}100%{box-shadow:0 0 0 0 rgba(29,122,62,0)}}
+.lanes{display:flex;flex-wrap:wrap;gap:6px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.feed{max-height:420px;overflow-y:auto;padding:6px 0}
+.ev{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:start;padding:10px 18px;animation:evin .45s var(--ease)}
+.ev+.ev{border-top:1px solid #f0eee9}
+@keyframes evin{from{opacity:0;transform:translateX(-8px);background:#fff8e6}to{opacity:1;transform:none;background:transparent}}
+.ev .msg{font-size:var(--text-sm);color:var(--ink-2);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.ev .msg b{color:var(--ink)}
+.ev time{font-size:.7rem;color:var(--faint);white-space:nowrap;padding-top:2px}
+@media (max-width:560px){.ev{grid-template-columns:1fr auto}.ev .pill{grid-column:1/-1;width:fit-content}}
+.controls-row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- Dealer view ---------- */
+.d-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.d-head h2{margin-top:6px}
+.dealer-id{display:flex;align-items:center;gap:10px;font-size:var(--text-sm);color:var(--muted)}
+.dealer-id .av{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.75rem}
+.dealer-id b{color:var(--ink);display:block;font-size:var(--text-sm)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.kpi{padding:14px 16px}
+.kpi .k{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.kpi .v{font-family:var(--f-display);font-weight:800;font-size:1.75rem;letter-spacing:-.02em;line-height:1.1;margin-top:6px}
+.kpi .s{font-size:.72rem;color:var(--faint)}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.workspace{display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start}
+@media (max-width:1000px){.workspace{grid-template-columns:1fr}}
+.queue{overflow:hidden;display:flex;flex-direction:column}
+.q-filters{display:flex;gap:4px;padding:10px;border-bottom:1px solid var(--border);background:var(--surface-2);overflow-x:auto}
+.qf{height:32px;padding:0 12px;border-radius:8px;font-size:.8rem;font-weight:700;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.qf:hover{color:var(--ink);background:var(--sunken)}
+.qf.active{background:var(--ink);color:#fff}
+.qf .c{font-size:.68rem;background:rgba(127,127,127,.18);border-radius:6px;padding:0 6px;line-height:18px}
+.qf.active .c{background:rgba(255,255,255,.2)}
+.q-list{max-height:640px;overflow-y:auto}
+.q-item{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #f0eee9;text-align:left;width:100%;transition:background .15s var(--ease);position:relative}
+.q-item:hover{background:var(--surface-2)}
+.q-item.sel{background:#fdf3f2}
+.q-item.sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brand)}
+.q-thumb{width:48px;height:48px;border-radius:10px;overflow:hidden;background:var(--conn-soft);display:grid;place-items:center;color:var(--conn)}
+.q-thumb img{width:100%;height:100%;object-fit:cover}
+.q-main{min-width:0}
+.q-main .t{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);font-weight:700}
+.q-main .p{font-weight:800;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-main .e{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.q-conf{font-size:.78rem;font-weight:800}
+.new-flag{font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--brand);border-radius:4px;padding:1px 5px}
+
+.detail{overflow:hidden}
+.dt-head{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.dt-head .id{font-size:.75rem;font-weight:700;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dt-head h3{font-family:var(--f-display);font-size:1.4rem;font-weight:800;letter-spacing:-.015em;margin:6px 0 2px}
+.dt-head .cust{font-size:var(--text-sm);color:var(--muted)}
+.dt-body{display:grid;grid-template-columns:260px 1fr;gap:22px;padding:22px}
+@media (max-width:760px){.dt-body{grid-template-columns:1fr}}
+.evidence{border-radius:var(--r-md);overflow:hidden;background:var(--sunken);aspect-ratio:1/1;position:relative}
+.evidence img{width:100%;height:100%;object-fit:cover}
+.evidence .lbl{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);color:#fff;font-size:.66rem;font-weight:700;padding:3px 8px;border-radius:6px}
+.evidence.fault{background:linear-gradient(160deg,#0b3e43,#0d6b72);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:20px;gap:10px}
+.evidence.fault .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.6rem;font-weight:700}
+.evidence.fault .d{font-size:.8rem;color:#cfe9eb}
+.evidence.fault .tel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.evidence.fault .tel div{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;font-size:.68rem;color:#b8dfe2}
+.evidence.fault .tel b{display:block;color:#fff;font-size:.82rem}
+.ev-meta{margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:.78rem}
+.ev-meta div{display:flex;justify-content:space-between;gap:10px}
+.ev-meta span{color:var(--muted)}
+.ev-meta b{text-align:right;overflow-wrap:anywhere}
+.blk{padding:16px 0;border-top:1px solid var(--border)}
+.blk:first-child{padding-top:0;border-top:none}
+.blk-t{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ai-sug{display:flex;gap:16px;align-items:center}
+.ai-sug .nm{font-weight:800;font-size:1.05rem}
+.ai-sug .no{font-size:.78rem;color:var(--muted)}
+.ai-sug .pr{font-family:var(--f-display);font-weight:800;font-size:1.25rem;margin-left:auto;white-space:nowrap}
+.alt{margin-top:10px;font-size:.8rem;color:var(--ink-2);background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:8px;padding:8px 10px}
+.inv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.inv{grid-template-columns:1fr}}
+.inv-box{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
+.inv-box .k{font-size:.72rem;color:var(--muted);font-weight:700}
+.inv-box .v{font-family:var(--f-display);font-weight:800;font-size:1.4rem;line-height:1.2}
+.inv-box .s{font-size:.72rem;color:var(--muted)}
+.inv-box.zero .v{color:var(--err)}
+.one-check{font-size:.72rem;color:var(--erp);font-weight:700;margin-top:8px;display:flex;align-items:center;gap:6px}
+.rule{border-radius:var(--r-md);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;font-size:var(--text-sm)}
+.rule svg{flex-shrink:0;margin-top:1px}
+.rule.ok{background:var(--ok-soft);color:#14532b}
+.rule.warn{background:var(--warn-soft);color:#6f4200}
+.rule.info{background:var(--erp-soft);color:#1f3a66}
+.rule.done{background:var(--sunken);color:var(--ink-2)}
+.rule b{display:block}
+.act-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.act-btns{display:flex;gap:10px;flex-wrap:wrap;flex:1;padding-top:21px;min-width:0}
+.qty{display:flex;flex-direction:column;gap:4px}
+.qty label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stepper{display:flex;align-items:center;border:1px solid var(--border-strong);border-radius:10px;height:42px;overflow:hidden;background:var(--surface)}
+.stepper button{width:36px;height:100%;font-size:1.1rem;font-weight:700;color:var(--ink-2)}
+.stepper button:hover:not(:disabled){background:var(--sunken)}
+.stepper button:disabled{color:var(--faint);cursor:not-allowed}
+.stepper input{width:44px;height:100%;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-weight:800;background:transparent}
+.stepper input:disabled{color:var(--muted)}
+.stepper.bad{border-color:var(--err)}
+.qty-err{font-size:.72rem;color:var(--err);font-weight:700;min-height:1em}
+.audit{display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--ink-2)}
+.audit div{display:flex;gap:10px}
+.audit time{color:var(--faint);white-space:nowrap;min-width:60px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,140%);background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:var(--text-sm);font-weight:500;box-shadow:var(--sh-lg);z-index:60;display:flex;gap:10px;align-items:center;max-width:min(520px,calc(100vw - 32px));transition:transform .4s var(--ease)}
+.toast.show{transform:translate(-50%,0)}
+.toast i{width:8px;height:8px;border-radius:50%;background:#5ee08a;flex-shrink:0}
+footer{border-top:1px solid var(--border);margin-top:20px}
+footer .container{padding-top:22px;padding-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:var(--text-xs);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="brand">
+      <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-10 4 7 3-4 6 7"/></svg></div>
+      <div class="brand-name">Parts Assistant<small>AGCO · Concept prototype</small></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button class="tab active" data-view="overview" role="tab" aria-selected="true" data-testid="tab-overview">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Overview</button>
+      <button class="tab" data-view="farmer" role="tab" aria-selected="false" data-testid="tab-farmer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>Farmer app</button>
+      <button class="tab" data-view="dealer" role="tab" aria-selected="false" data-testid="tab-dealer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Dealer desk<span class="pill pill-brand" id="nav-review-count" style="height:18px;padding:0 6px;font-size:.65rem">0</span></button>
+    </nav>
+    <div class="nav-right">
+      <span class="chip-sim">Simulated data</span>
+      <button class="btn-ghost-dark" id="reset-demo" data-testid="button-reset">Reset demo</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- =================== OVERVIEW =================== -->
+<section class="view active" id="view-overview">
+  <div class="container">
+    <div class="hero">
+      <img src="assets/hero-field.jpg" alt="Red tractor working a field at sunrise" />
+      <div class="hero-in">
+        <div class="eyebrow">Digital transformation proposal · AGCO Corporation</div>
+        <h1 class="h-display">The right part, before the farmer even calls.</h1>
+        <p>A Connected AI Parts Assistant for AGCO's farmer parts request journey. It identifies parts from a photo, checks dealer and AGCO stock in one step, and starts the request automatically when a connected tractor reports a fault. Dealers stay in control of every risky decision.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" data-go="farmer" data-testid="cta-farmer">Try the farmer app
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button class="btn btn-outline" data-go="dealer" data-testid="cta-dealer">Open the dealer desk</button>
+        </div>
+        <div class="hero-meta">
+          <span>Team <strong>Tantalizing Table Two</strong></span>
+          <span>TCU · INSC 20263</span>
+          <span>Sprint 10 prototype</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card stat"><div class="v">$1.87B</div><div class="k">AGCO replacement-parts sales in 2025, or 19% of $10.08B net sales</div><div class="src">AGCO 10-K & 2025 annual report</div></div>
+      <div class="card stat"><div class="v">~2,800</div><div class="k">Independent dealers worldwide, 1,190 of them in North America</div><div class="src">AGCO 10-K</div></div>
+      <div class="card stat"><div class="v">$1.5–3.0M</div><div class="k">Estimated cost of a one-season pilot with 10–15 dealers</div><div class="src">Team planning estimate</div></div>
+      <div class="card stat"><div class="v" style="color:var(--ok)">$18.7M/yr</div><div class="k">Illustrative upside if scaled parts sales grow by just 1%</div><div class="src">Team illustration, not a forecast</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><div class="eyebrow">The problem</div><h2 class="h2" style="margin-top:6px">Today the journey is reactive and slow</h2>
+        <p class="lead">Nothing happens until the farmer notices a breakdown, which often comes during planting or harvest. After that, every step relies on phone calls and manual lookups.</p></div>
+      </div>
+      <div class="compare">
+        <div class="card">
+          <div class="compare-label"><span class="pill pill-err"><span class="dot"></span>As-is</span><span class="small muted">Current process (Sprint 4 model)</span></div>
+          <ol class="flow asis">
+            <li><span class="n">1</span><strong>Farmer notices the problem</strong><span>Discovery is reactive. They may not know the part number. <span class="bad">Downtime starts here.</span></span></li>
+            <li><span class="n">2</span><strong>Farmer calls or drives to the dealer</strong><span>Identification depends on a verbal description.</span></li>
+            <li><span class="n">3</span><strong>Dealer looks up the part manually</strong><span>If the part can't be identified, it goes back to the farmer. <span class="bad">Rework loop.</span></span></li>
+            <li><span class="n">4</span><strong>Dealer checks local stock, then AGCO stock</strong><span>Two separate systems, checked one after the other.</span></li>
+            <li><span class="n">5</span><strong>Farmer waits on a backorder</strong><span>Updates only come if the dealer remembers to call. <span class="bad">Uncertain ETA.</span></span></li>
+          </ol>
+        </div>
+        <div class="card" style="border-color:#efc9c9">
+          <div class="compare-label"><span class="pill pill-ok"><span class="dot"></span>To-be</span><span class="small muted">With the Connected AI Parts Assistant</span></div>
+          <ol class="flow tobe">
+            <li><span class="n">1</span><strong>Tractor reports a fault code, or the farmer snaps a photo</strong><span>Two ways to start, and neither needs a phone call. <span class="good">Proactive.</span></span></li>
+            <li><span class="n">2</span><strong>AI suggests the genuine part</strong><span>Uses the photo, serial number, and fault-code table to suggest a part, with a confidence score.</span></li>
+            <li><span class="n">3</span><strong>One live stock check</strong><span>Dealer and AGCO warehouse inventory are checked together through ERP. <span class="good">Instant answer.</span></span></li>
+            <li><span class="n">4</span><strong>Dealer reviews and approves</strong><span>Low-confidence or costly cases always go to a human first.</span></li>
+            <li><span class="n">5</span><strong>Farmer gets automatic updates</strong><span>Every date change triggers a text or email. <span class="good">No chasing.</span></span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><div class="eyebrow">The solution</div><h2 class="h2" style="margin-top:6px">Three components in one journey</h2>
+        <p class="lead">Each component runs through FarmerCore, the parts app farmers already use, and the dealer's existing parts system. AGCO already owns most of the pieces. What's missing is the link between them.</p></div>
+      </div>
+      <div class="components">
+        <div class="card comp">
+          <div class="comp-vis"><img src="assets/part-dpf.jpg" alt="Photo of a pressure sensor on a tractor engine" /><div class="ov"><span class="pill pill-ai" style="background:#fff">AI match · 96%</span></div></div>
+          <div class="comp-body"><div class="comp-letter">A · PHOTO IDENTIFICATION</div><h3 class="h3">AI part identification</h3>
+            <p>The farmer uploads a photo and the machine serial number. The AI suggests the most likely genuine AGCO part numbers, each with a confidence score.</p>
+            <div class="comp-solves"><b>Solves:</b> unknown part numbers, wrong-part orders, and rework. <b>Benchmark:</b> New Holland's visual parts search.</div></div>
+        </div>
+        <div class="card comp">
+          <div class="comp-vis"><div class="avail-vis">
+            <div class="avail-row"><span>Hart Machinery Co.</span><b>4 in stock</b></div>
+            <div class="avail-row"><span>AGCO warehouse · Batavia</span><b>26 · 2 days</b></div>
+            <div class="avail-row" style="background:rgba(94,224,138,.18)"><span>Backorder ETA changed</span><b>Texted ✓</b></div></div></div>
+          <div class="comp-body"><div class="comp-letter">B · LIVE AVAILABILITY</div><h3 class="h3">One stock check, automatic updates</h3>
+            <p>Dealer and AGCO inventory are checked together for a single availability answer. When a backorder date changes, a text or email goes out automatically.</p>
+            <div class="comp-solves"><b>Solves:</b> two separate inventory checks and silence on backorders.</div></div>
+        </div>
+        <div class="card comp">
+          <div class="comp-vis"><div class="fault-vis"><span class="code">AGCO Connect · P203B</span><span class="sig"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff8a7d" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>DPF pressure fault</span><span style="font-size:.78rem;color:#cfe9eb">Mapped to part 4762902M1 and stock checked at 6:12 AM, before anyone picked up a phone.</span></div></div>
+          <div class="comp-body"><div class="comp-letter">C · FAULT-TRIGGERED</div><h3 class="h3">Connected-tractor alerts</h3>
+            <p>If the farmer opts in, AGCO Connect tractors send fault codes to the assistant. It maps each code to the likely part and checks stock before the farmer calls.</p>
+            <div class="comp-solves"><b>Solves:</b> reactive discovery and peak-season downtime. <b>Benchmark:</b> John Deere Connected Support.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="split">
+        <div class="card pad">
+          <div class="eyebrow">Human in the loop</div><h2 class="h2" style="margin:6px 0 8px">Dealers stay in control</h2>
+          <p class="muted small" style="margin-bottom:18px">The AI never commits money or changes a repair plan by itself. In the prototype this shows up as the <b>80% confidence rule</b>. Anything below 80% goes to a parts specialist.</p>
+          <div class="levels">
+            <div class="level"><div><span class="pill pill-ok">AI acts alone</span><div class="who">Low risk · logged and reviewed weekly</div></div><p>Order-status answers from live data, backorder date-change alerts, and catalog results.</p></div>
+            <div class="level"><div><span class="pill pill-warn">AI recommends</span><div class="who">Dealer parts specialist approves</div></div><p>Low-confidence part matches, substitute parts, and parts suggested from a fault code.</p></div>
+            <div class="level"><div><span class="pill pill-err">Human only</span><div class="who">Dealer staff, escalate to AGCO</div></div><p>Refunds, warranty claims, pricing exceptions, expedite fees, safety parts, and harvest-critical breakdowns.</p></div>
+          </div>
+        </div>
+        <div class="card pad">
+          <div class="eyebrow">Architecture</div><h2 class="h2" style="margin:6px 0 8px">Hybrid cloud, security first</h2>
+          <p class="muted small" style="margin-bottom:18px">The app and AI scale in the public cloud during planting and harvest peaks, while AGCO's most sensitive data stays private.</p>
+          <div class="arch">
+            <div class="arch-zone pub"><h4>Public cloud · PaaS</h4><div class="arch-chips"><span>FarmerCore app</span><span>Dealer parts desk</span><span>AI image recognition</span><span>Notifications</span></div></div>
+            <div class="arch-link">Encrypted, limited API · MFA on 100% of dealer accounts</div>
+            <div class="arch-zone priv"><h4>AGCO private systems</h4><div class="arch-chips"><span>ERP · inventory, orders, pricing</span><span>CRM · consent & contacts</span><span>SCM · warehouse ETAs</span><span>AGCO Connect telemetry</span></div></div>
+          </div>
+          <p class="xs muted" style="margin-top:14px">Why security comes first: AGCO's 2022 ransomware attack disrupted production and parts operations for about two weeks.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><div><div class="eyebrow">Benchmarking</div><h2 class="h2" style="margin-top:6px">AGCO has the building blocks but hasn't connected them</h2></div></div>
+      <div class="card scroll-x">
+        <table class="bench">
+          <thead><tr><th>Capability</th><th>AGCO today</th><th>John Deere</th><th>CNH (New Holland / Case IH)</th></tr></thead>
+          <tbody>
+            <tr><td>Online parts ordering</td><td><span class="yes">Yes</span>, FarmerCore 24/7 ordering</td><td><span class="yes">Yes</span>, Shop.Deere.com</td><td><span class="yes">Yes</span>, mycnhstore.com</td></tr>
+            <tr><td>AI photo part search</td><td><span class="no">No</span> public evidence found</td><td><span class="no">No</span> public evidence found</td><td><span class="yes">Yes</span>, covering 200,000 parts in phase 1</td></tr>
+            <tr><td>Remote fault-code diagnostics</td><td><span class="yes">Yes</span>, AGCO Connect for dealers</td><td><span class="yes">Yes</span>, Connected Support and Expert Alerts</td><td><span class="part">Not reviewed</span></td></tr>
+            <tr><td>Fault alert linked to a parts order</td><td><span class="no">Not linked yet</span>, which is the gap</td><td><span class="yes">Yes</span>, techs arrive with the right parts</td><td><span class="part">Not reviewed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><div><div class="eyebrow">Implementation</div><h2 class="h2" style="margin-top:6px">Start small, then scale only through the gates</h2>
+      <p class="lead">These timelines are team planning assumptions, not AGCO commitments.</p></div></div>
+      <div class="card pad">
+        <div class="roadmap">
+          <div class="phase first"><div class="dot-n">0</div><div class="when">Months 1–3</div><h4>Prepare</h4><p>Put security controls in place first. Sign up 10–15 pilot dealers, build a fault-to-part table for the top 25 codes, and capture baseline metrics.</p></div>
+          <div class="phase"><div class="dot-n">1</div><div class="when">Months 4–9</div><h4>Pilot one season</h4><p>Run all three components with the pilot dealers. Hold weekly dealer-council reviews and log every override of an AI suggestion.</p></div>
+          <div class="phase"><div class="dot-n">2</div><div class="when">Months 10–18</div><h4>Scale North America</h4><p>Roll out to more of the 1,190 North American dealers, add AR technician support, and standardize the dealer API.</p></div>
+          <div class="phase"><div class="dot-n">3</div><div class="when">Months 19–30</div><h4>Global + forecasting</h4><p>Expand to Europe with a country-by-country GDPR review. Add AI demand forecasting in recommend-only mode.</p></div>
+        </div>
+        <div class="gates">
+          <div class="gate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Every high-rated risk has a working control</div>
+          <div class="gate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Wrong-part orders don't increase</div>
+          <div class="gate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>MFA on 100% of dealer accounts</div>
+          <div class="gate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Pilot dealers report real time savings</div>
+        </div>
+        <p class="xs muted" style="margin-top:12px">If a gate is missed, scale-up pauses. The project itself continues.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="money-grid">
+        <div class="card pad">
+          <div class="eyebrow">Costs</div><h2 class="h2" style="margin:6px 0 14px">Pilot year: about $1.5–3.0M</h2>
+          <div class="cost-row"><span>ERP integration and secure limited API</span><b class="tnum">$0.5–1.0M</b></div>
+          <div class="cost-row"><span>AI image recognition setup and vendor</span><b class="tnum">$0.3–0.5M + $0.2–0.4M/yr</b></div>
+          <div class="cost-row"><span>Public cloud hosting (PaaS)</span><b class="tnum">$0.1–0.2M/yr</b></div>
+          <div class="cost-row"><span>Security and compliance (MFA, audits, GDPR)</span><b class="tnum">$0.2–0.4M</b></div>
+          <div class="cost-row"><span>Dealer training and change management</span><b class="tnum">$0.1–0.2M</b></div>
+          <div class="cost-row"><span>Pilot program (10–15 dealers, one season)</span><b class="tnum">$0.3–0.5M</b></div>
+          <div class="cost-row total"><span>Pilot-year total</span><span class="tnum">≈ $1.5–3.0M</span></div>
+          <p class="xs muted" style="margin-top:10px">These are team planning estimates in round ranges and should be validated with AGCO finance.</p>
+        </div>
+        <div class="card pad" style="display:flex;flex-direction:column">
+          <div class="eyebrow">Value</div><h2 class="h2" style="margin:6px 0 14px">Why it pays back</h2>
+          <div class="bigfig">$18.7M</div><p class="small muted" style="margin:6px 0 18px">per year if fully scaled parts sales grow by 1% on the 2025 base of $1.87B. This is an illustration, not a forecast.</p>
+          <div class="levels" style="margin-top:auto">
+            <div class="level" style="grid-template-columns:1fr"><p><b>Pilot targets:</b> cut time-to-availability answer in half · fewer wrong-part returns · 100% of backorder date changes auto-notified · ≥50% farmer opt-in to connected alerts</p></div>
+            <div class="level" style="grid-template-columns:1fr"><p><b>Strategy fit:</b> supports FarmerCore's farmer-first approach and the $2.3B parts-by-2029 goal. Dealers are strengthened, not bypassed.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><div><div class="eyebrow">Evidence</div><h2 class="h2" style="margin-top:6px">Sources</h2></div>
+        <div class="team">
+          <div class="member"><span class="av">DD</span>Dilan Desman</div>
+          <div class="member"><span class="av">WT</span>Wesley Taylor</div>
+          <div class="member"><span class="av">SR</span>Samson Romano</div>
+        </div>
+      </div>
+      <div class="sources">
+        <a class="src-link" href="https://www.sec.gov/Archives/edgar/data/880266/000088026626000010/agco-20251231.htm" target="_blank" rel="noopener"><b>AGCO Form 10-K, FY2025</b><span>Sales, dealer network, and competitors</span></a>
+        <a class="src-link" href="https://www.sec.gov/Archives/edgar/data/880266/000088026626000027/agco2025annualreport_ars.htm" target="_blank" rel="noopener"><b>AGCO 2025 Annual Report</b><span>Parts revenue and the $2.3B 2029 target</span></a>
+        <a class="src-link" href="https://get.agcoconnect.com/for-dealers/" target="_blank" rel="noopener"><b>AGCO Connect, for dealers</b><span>Remote fault-code visibility</span></a>
+        <a class="src-link" href="https://www.deere.com/en-us/parts-owner-support/connected-support/agriculture-connected-support" target="_blank" rel="noopener"><b>John Deere Connected Support</b><span>Proactive-service benchmark</span></a>
+        <a class="src-link" href="https://agriculture.newholland.com/en-ie/europe/new-holland-world/news/2025/new-holland-introduces-ai-powered-visual-parts-search" target="_blank" rel="noopener"><b>New Holland AI visual parts search</b><span>Photo-based ID benchmark</span></a>
+        <a class="src-link" href="https://news.agcocorp.com/2022-05-06-AGCO-Announces-Ransomware-Attack" target="_blank" rel="noopener"><b>AGCO ransomware attack, 2022</b><span>Why security comes first</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FARMER =================== -->
+<section class="view" id="view-farmer">
+  <div class="container">
+    <div class="farmer-layout">
+      <div class="phone-wrap">
+        <div class="phone" aria-label="Farmer mobile app mockup">
+          <div class="screen">
+            <div class="island"></div>
+            <div class="push" id="push" role="status"><div class="pi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M3 17l5-10 4 7 3-4 6 7"/></svg></div><div style="min-width:0"><b id="push-t">FarmerCore Parts</b><p id="push-m"></p></div><small>now</small></div>
+            <div class="status-bar"><span>6:14</span><span class="sb-icons"><svg width="16" height="11" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 26 12" fill="none" stroke="currentColor"><rect x=".5" y=".5" width="22" height="11" rx="3"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="currentColor"/></svg></span></div>
+            <div class="app-head"><div class="row"><div><div class="app-sub" id="app-sub">Good morning, Hart Farms</div><div class="app-title" id="app-title">My machines</div></div><div class="avatar">HF</div></div></div>
+            <div class="app-body" id="app-body"></div>
+            <nav class="tabbar">
+              <button class="tb active" data-screen="home" data-testid="phone-home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</button>
+              <button class="tb" data-screen="scan" data-testid="phone-scan"><span class="scan-fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>Scan part</button>
+              <button class="tb" data-screen="orders" data-testid="phone-orders"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Orders<span class="badge" id="orders-badge" style="display:none">0</span></button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <div class="eyebrow">Farmer experience</div>
+          <h2 class="h2">Hart Farms needs a part during harvest</h2>
+          <p class="lead">Use the phone like a real app. As you go, the live feed below shows each system the request passes through, including the tractor, the AI, ERP inventory, and the dealer. These map to the five lanes of our to-be process model.</p>
+        </div>
+
+        <div class="card pad">
+          <div class="blk-t" style="margin-bottom:6px">Guided demo · about 60 seconds</div>
+          <ol class="guide" id="guide">
+            <li data-step="1"><span class="gn">1</span><div><b>Start from the tractor's fault alert</b><span>On Home, tap "Start parts request". The tractor started this, so nobody had to call.</span></div></li>
+            <li data-step="2"><span class="gn">2</span><div><b>Scan an unclear photo</b><span>Tap Scan part, choose "Worn drive belt", then identify it. The AI is only 62% sure.</span></div></li>
+            <li data-step="3"><span class="gn">3</span><div><b>Review both on the Dealer desk</b><span>Reserve the 96% match. Escalate the 62% one to a specialist.</span></div></li>
+            <li data-step="4"><span class="gn">4</span><div><b>Watch the farmer get updated</b><span>The phone shows a push notification, and Orders updates.</span></div></li>
+            <li data-step="5"><span class="gn">5</span><div><b>Simulate a backorder date change</b><span>Use the button below. The farmer is notified automatically.</span></div></li>
+          </ol>
+          <div class="controls-row" style="margin-top:14px">
+            <button class="btn btn-dark" id="sim-eta" data-testid="button-sim-eta"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Simulate: warehouse moves up ETA</button>
+            <button class="btn btn-outline" data-go="dealer">Go to dealer desk →</button>
+          </div>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <div class="feed-head"><div><div class="h3" style="font-size:1.05rem">Behind the scenes</div><div class="xs muted">Every event in the to-be process, as it happens</div></div><span class="live"><i></i>Live</span></div>
+          <div class="lanes">
+            <span class="pill pill-conn">Connected tractor</span><span class="pill pill-brand">Farmer</span><span class="pill pill-ai">AI Parts Assistant</span><span class="pill pill-neutral">Dealer</span><span class="pill pill-erp">AGCO ERP</span>
+          </div>
+          <div class="feed" id="feed" data-testid="event-feed"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== DEALER =================== -->
+<section class="view" id="view-dealer">
+  <div class="container">
+    <div class="d-head">
+      <div><div class="eyebrow">Dealer parts desk</div><h2 class="h2">Hart Machinery Co. · Request queue</h2>
+        <p class="muted small" style="margin-top:6px;max-width:70ch">Every request comes in with the AI's part suggestion and a single live stock check. You can reserve only when the AI is at least <b>80% confident</b> and the dealer has the quantity on hand. Everything else goes to a human or to the AGCO warehouse.</p></div>
+      <div class="dealer-id"><span class="av">DD</span><div><b>Dilan Desman</b>Parts specialist · MFA verified</div></div>
+    </div>
+    <div class="kpis">
+      <div class="card kpi"><div class="k">Open</div><div class="v tnum" id="k-open">0</div><div class="s">Awaiting a decision</div></div>
+      <div class="card kpi"><div class="k" style="color:var(--warn)">Needs review</div><div class="v tnum" id="k-review">0</div><div class="s">Below 80% or no stock</div></div>
+      <div class="card kpi"><div class="k" style="color:var(--ok)">Reserved</div><div class="v tnum" id="k-res">0</div><div class="s">Ready for pickup</div></div>
+      <div class="card kpi"><div class="k" style="color:var(--erp)">Warehouse orders</div><div class="v tnum" id="k-bo">0</div><div class="s">Backordered from AGCO</div></div>
+      <div class="card kpi"><div class="k">Escalated</div><div class="v tnum" id="k-esc">0</div><div class="s">With a specialist</div></div>
+    </div>
+    <div class="workspace">
+      <div class="card queue">
+        <div class="q-filters" role="group" aria-label="Filter requests" id="q-filters">
+          <button class="qf active" data-f="all">All <span class="c" id="c-all">0</span></button>
+          <button class="qf" data-f="ready">Ready <span class="c" id="c-ready">0</span></button>
+          <button class="qf" data-f="review">Needs review <span class="c" id="c-review">0</span></button>
+          <button class="qf" data-f="done">Done <span class="c" id="c-done">0</span></button>
+        </div>
+        <div class="q-list" id="q-list" data-testid="queue-list"></div>
+      </div>
+      <div class="card detail" id="detail" data-testid="request-detail"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="container"><span>Sprint 10 project prototype · INSC 20263 Digital Transformation Consulting · TCU · Team Tantalizing Table Two</span><span>Concept demo with simulated data. Not affiliated with or endorsed by AGCO. Part photos are AI-generated.</span></div></footer>
+<div class="toast" id="toast" role="status"><i></i><span id="toast-m"></span></div>
+
+<script>
+(function(){
+'use strict';
+var THRESH = 80;
+var $ = function(s,r){return (r||document).querySelector(s);};
+var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function money(n){return '$'+n.toFixed(2);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var clock = new Date(2026,10,18,6,12,0);
+function tick(min){clock = new Date(clock.getTime()+ (min||1)*60000);return fmt(clock);}
+function fmt(d){var h=d.getHours(),m=d.getMinutes();return ((h%12)||12)+':'+(m<10?'0':'')+m+(h<12?' AM':' PM');}
+
+/* ---------------- data ---------------- */
+var PHOTOS = {
+  dpf:{key:'dpf',img:'assets/part-dpf.jpg',label:'DPF sensor',machine:'MF 8S.245',serial:'MF8S-245-0042117',symptom:'Sensor on exhaust pipe',part:'DPF pressure sensor',partNo:'4762902M1',price:186,dealer:4,agco:26,conf:96},
+  hyd:{key:'hyd',img:'assets/part-hydraulic.jpg',label:'Hydraulic fitting',machine:'MF 9700 mower',serial:'MF97-0088310',symptom:'Leaking hydraulic fitting',part:'Hydraulic fitting kit',partNo:'3899476M1',price:42,dealer:6,agco:90,conf:84},
+  belt:{key:'belt',img:'assets/part-belt.jpg',label:'Worn drive belt',machine:'MF 5700S loader',serial:'MF57S-0019925',symptom:'Cracked belt, unclear photo',part:'Drive belt',partNo:'821044X1',price:38,dealer:3,agco:14,conf:62,alt:{part:'Belt tensioner assembly',partNo:'821099X2',price:74}},
+  cyl:{key:'cyl',img:'assets/part-cylinder.jpg',label:'Unlabeled cylinder',machine:'Unknown',serial:'Not found',symptom:'No markings, no serial',part:'Hydraulic cylinder',partNo:'—',price:260,dealer:2,agco:8,conf:41}
+};
+function seed(){
+  return [
+    {id:'R-1042',src:'fault',cust:'Miller Grain LLC',machine:'Fendt 942 Vario',serial:'F942-7781203',symptom:'Transmission temp alert',code:'T4410',part:'Transmission temp sensor',partNo:'F9011023',price:129,dealer:2,agco:31,conf:88,status:'new',qty:1,qtyRaw:'1',t:'5:48 AM',audit:[]},
+    {id:'R-1041',src:'photo',img:'assets/part-hydraulic.jpg',cust:'Ortega Family Farms',machine:'MF 9700 mower',serial:'MF97-0088310',symptom:'Leaking hydraulic fitting',part:'Hydraulic fitting kit',partNo:'3899476M1',price:42,dealer:6,agco:90,conf:84,status:'new',qty:2,qtyRaw:'2',t:'5:31 AM',audit:[]},
+    {id:'R-1040',src:'fault',cust:'Bluestem Cattle Co.',machine:'MF 5713 tractor',serial:'MF5713-220871',symptom:'Low fuel pressure warning',code:'P0087',part:'Fuel filter',partNo:'5713190X1',price:24,dealer:0,agco:140,conf:97,status:'new',qty:2,qtyRaw:'2',t:'5:02 AM',audit:[]},
+    {id:'R-1039',src:'photo',img:'assets/part-cylinder.jpg',cust:'K. Novak',machine:'Unknown',serial:'Not found',symptom:'Unlabeled cylinder, no serial',part:'Hydraulic cylinder',partNo:'—',price:260,dealer:2,agco:8,conf:41,status:'new',qty:1,qtyRaw:'1',t:'4:40 AM',audit:[]},
+    {id:'R-1038',src:'fault',cust:'Prairie Wind Farms',machine:'Valtra A145',serial:'VA145-551920',symptom:'EGR valve fault',code:'P0401',part:'EGR valve',partNo:'VA993201',price:310,dealer:1,agco:12,conf:93,status:'reserved',qty:1,qtyRaw:'1',t:'Yesterday',audit:[{t:'Yesterday',m:'Reserved 1 × EGR valve. Farmer notified.'}]}
+  ];
+}
+var S;
+function init(){
+  S = {view:S?S.view:'overview', screen:'home', requests:seed(), seq:0, sel:'R-1042', filter:'all',
+       photo:null, scanning:false, result:null, sentPhoto:{}, faultSent:false, etaDone:false, events:[], steps:{}, unseen:0};
+  clock = new Date(2026,10,18,6,12,0);
+  log('tractor','<b>MF 8S.245</b> (Hart Farms) reported fault <b>P203B</b>, DPF pressure out of range. Farmer has opted in to connected alerts.');
+  log('ai','Mapped fault P203B to <b>DPF pressure sensor 4762902M1</b> using the top-25 fault-code table. Confidence 96%.');
+  log('erp','One stock check: Hart Machinery Co. <b>4 on hand</b>; AGCO warehouse 26 (2-day transfer).');
+  log('farmer','Push notification sent: "Your tractor reported a fault. The part is in stock nearby."');
+}
+var LANE = {tractor:['pill-conn','Tractor'],farmer:['pill-brand','Farmer'],ai:['pill-ai','AI assistant'],dealer:['pill-neutral','Dealer'],erp:['pill-erp','AGCO ERP']};
+function log(lane,msg){S.events.unshift({lane:lane,msg:msg,t:tick(1)}); renderFeed();}
+function renderFeed(){
+  var f=$('#feed'); if(!f) return;
+  f.innerHTML = S.events.map(function(e){var l=LANE[e.lane];return '<div class="ev"><span class="pill '+l[0]+'">'+l[1]+'</span><div class="msg">'+e.msg+'</div><time>'+e.t+'</time></div>';}).join('');
+}
+function step(n){S.steps[n]=true; renderGuide();}
+function renderGuide(){
+  var cur=null;
+  $$('#guide li').forEach(function(li){var n=+li.dataset.step;li.classList.toggle('done',!!S.steps[n]);li.classList.remove('cur');if(!S.steps[n]&&cur===null){cur=n;li.classList.add('cur');}});
+}
+function toast(m){var t=$('#toast');$('#toast-m').textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('show');},3800);}
+function push(title,m){var p=$('#push');$('#push-t').textContent=title;$('#push-m').textContent=m;p.classList.add('show');clearTimeout(push.h);push.h=setTimeout(function(){p.classList.remove('show');},4200);}
+
+/* ---------------- views ---------------- */
+function go(v){
+  S.view=v;
+  $$('.tab').forEach(function(t){var a=t.dataset.view===v;t.classList.toggle('active',a);t.setAttribute('aria-selected',a);});
+  $$('.view').forEach(function(x){x.classList.toggle('active',x.id==='view-'+v);});
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(v==='dealer') renderDealer();
+}
+$$('.tab').forEach(function(t){t.addEventListener('click',function(){go(t.dataset.view);});});
+$$('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go);});});
+
+/* ---------------- farmer phone ---------------- */
+function setScreen(s){S.screen=s; if(s==='orders') S.unseen=0; $$('.tb').forEach(function(b){b.classList.toggle('active',b.dataset.screen===s);}); renderPhone();}
+$$('.tb').forEach(function(b){b.addEventListener('click',function(){setScreen(b.dataset.screen);});});
+
+function ring(conf,size){
+  size=size||64; var r=(size/2)-6, c=2*Math.PI*r, col=conf>=THRESH?'var(--ok)':(conf>=55?'var(--warn)':'var(--err)');
+  return '<div class="ring" style="width:'+size+'px;height:'+size+'px"><svg width="'+size+'" height="'+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" stroke="var(--sunken)" stroke-width="6" fill="none"/><circle class="rc" cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" stroke="'+col+'" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+c+'" data-off="'+(c*(1-conf/100))+'"/></svg><span class="val">'+conf+'%</span></div>';
+}
+function animRings(root){requestAnimationFrame(function(){requestAnimationFrame(function(){$$('.rc',root).forEach(function(c){c.style.strokeDashoffset=c.dataset.off;});});});}
+
+function farmerReqs(){return S.requests.filter(function(r){return r.mine;});}
+function farmerStatus(r){
+  if(r.status==='reserved') return {pill:'pill-ok',txt:'Ready for pickup',stage:4,warn:false,line:'Reserved at Hart Machinery Co., pickup today'};
+  if(r.status==='backordered') return {pill:'pill-erp',txt:'Ordered from AGCO, ETA '+r.eta,stage:3,warn:false,line:'Shipping from AGCO warehouse'};
+  if(r.status==='escalated') return {pill:'pill-warn',txt:'Specialist confirming part',stage:2,warn:true,line:'A parts specialist is confirming the exact part'};
+  if(r.conf<THRESH) return {pill:'pill-warn',txt:'Dealer reviewing',stage:1,warn:true,line:'AI wasn\u2019t sure. A person will check it.'};
+  return {pill:'pill-neutral',txt:'Sent to dealer',stage:1,warn:false,line:'Dealer is preparing your part'};
+}
+
+function renderPhone(){
+  var b=$('#app-body'), title=$('#app-title'), sub=$('#app-sub');
+  var badge=$('#orders-badge'); var n=S.unseen; badge.style.display=n?'grid':'none'; badge.textContent=n;
+  if(S.screen==='home'){
+    title.textContent='My machines'; sub.textContent='Good morning, Hart Farms';
+    b.innerHTML =
+      '<div class="m-card alert-card"><span class="tag"><i></i>Fault detected · 6:12 AM</span>'+
+      '<h4>DPF pressure fault on your MF 8S.245</h4><p>Your tractor reported code P203B. We matched it to the likely part and checked stock before you had to call anyone.</p>'+
+      '<div class="alert-part"><div><b>DPF pressure sensor</b><span>4762902M1 · 4 in stock at Hart Machinery</span></div><span class="conf-mini">96% match</span></div>'+
+      '<button class="btn" id="start-fault" data-testid="button-start-fault" '+(S.faultSent?'disabled':'')+'>'+(S.faultSent?'Request sent to dealer ✓':'Start parts request')+'</button></div>'+
+      '<div class="sec-title">Machines</div>'+
+      '<div class="m-card machine"><div class="machine-img"><img src="assets/hero-field.jpg" alt="" style="object-position:70% 60%"/></div><div style="flex:1;min-width:0"><div class="nm">Massey Ferguson 8S.245</div><div class="meta">Serial MF8S-245-0042117 · 1,284 hrs</div></div><span class="conn-dot"><i></i>Connected</span></div>'+
+      '<div class="m-card machine"><div class="machine-img" style="display:grid;place-items:center;color:var(--muted)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="17" r="3"/><circle cx="18" cy="16" r="4"/><path d="M4 14V8h7l2 5h5"/></svg></div><div style="flex:1;min-width:0"><div class="nm">Massey Ferguson 5700S</div><div class="meta">Serial MF57S-0019925 · loader</div></div><span class="conn-dot" style="color:var(--faint)"><i style="background:var(--faint);box-shadow:none"></i>Not connected</span></div>'+
+      '<div class="quick"><button data-screen-go="scan"><span class="qi" style="background:var(--brand-soft);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><b>Identify a part</b><span>Snap a photo, no part number needed</span></button>'+
+      '<button data-screen-go="orders"><span class="qi" style="background:var(--erp-soft);color:var(--erp)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/></svg></span><b>Track orders</b><span>Live status and automatic updates</span></button></div>';
+    var sf=$('#start-fault'); if(sf) sf.addEventListener('click',startFault);
+  }
+  else if(S.screen==='scan'){
+    title.textContent='Identify a part'; sub.textContent='Photo + serial number';
+    if(S.scanning){
+      b.innerHTML='<div class="scan-stage"><img src="'+S.photo.img+'" alt=""/><div class="scan-corners"></div><div class="scan-line"></div><div class="scan-label"><span class="spin"></span>Matching against the genuine AGCO parts catalog…</div></div>'+
+        '<div class="m-card small" style="font-size:.78rem;color:var(--muted)">Checking photo features, serial number <b style="color:var(--ink)">'+esc(S.photo.serial)+'</b>, and machine history.</div>';
+    } else if(S.result){
+      var p=S.result, low=p.conf<THRESH, sent=S.sentPhoto[p.key];
+      b.innerHTML='<div class="result">'+
+        '<div class="m-card"><div class="res-head">'+ring(p.conf)+'<div style="min-width:0;flex:1"><div class="xs muted" style="font-weight:700">'+(p.partNo==='—'?'NO CONFIDENT MATCH':'TOP AI MATCH')+'</div><div class="nm">'+esc(p.part)+'</div><div class="no">'+(p.partNo==='—'?'Part number unknown':'Part '+p.partNo+' · fits '+esc(p.machine))+'</div></div><div class="res-price">'+money(p.price)+'</div></div></div>'+
+        (p.alt?'<div class="m-card" style="padding:10px 14px;font-size:.76rem"><b>Also possible:</b> '+esc(p.alt.part)+' ('+p.alt.partNo+') · '+money(p.alt.price)+'</div>':'')+
+        '<div class="m-card" style="padding:4px 14px"><div class="stock-line"><span class="l"><i style="background:'+(p.dealer>0?'var(--ok)':'var(--err)')+'"></i>Hart Machinery Co. · 6 mi</span><b>'+(p.dealer>0?p.dealer+' in stock':'Out of stock')+'</b></div><div class="stock-line"><span class="l"><i style="background:var(--ok)"></i>AGCO warehouse</span><b>'+p.agco+' · 2 days</b></div></div>'+
+        (low?'<div class="note-warn"><b>The AI isn\u2019t sure enough to order this.</b> Confidence is below the 80% threshold, so a dealer parts specialist will confirm the part. Nothing is ordered automatically.</div>':'<div class="note-ok"><b>High-confidence match.</b> The dealer will do a final check and reserve it for you.</div>')+
+        '<button class="btn btn-primary btn-block" id="send-photo" data-testid="button-send-photo" '+(sent?'disabled':'')+'>'+(sent?'Sent to Hart Machinery ✓':(low?'Send to dealer for review':'Send to dealer'))+'</button>'+
+        '<button class="btn btn-outline btn-block" id="scan-again">Scan another part</button></div>';
+      animRings(b);
+      $('#send-photo').addEventListener('click',sendPhoto);
+      $('#scan-again').addEventListener('click',function(){S.result=null;S.photo=null;renderPhone();});
+    } else {
+      b.innerHTML='<div class="m-card" style="font-size:.78rem;color:var(--ink-2);display:flex;gap:10px;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Demo: pick a sample photo. In the real app you\u2019d take your own.</div>'+
+        '<div class="photo-grid">'+Object.keys(PHOTOS).map(function(k){var p=PHOTOS[k];return '<button class="ph-opt'+(S.photo&&S.photo.key===k?' sel':'')+'" data-photo="'+k+'" data-testid="photo-'+k+'"><img src="'+p.img+'" alt="'+esc(p.label)+'"/><span class="cap">'+esc(p.label)+'<br/><span style="font-weight:500;opacity:.85">'+esc(p.machine)+'</span></span></button>';}).join('')+'</div>'+
+        '<div class="field"><label>Machine serial number</label><div class="inp"><span>'+(S.photo?esc(S.photo.serial):'Select a photo')+'</span>'+(S.photo&&S.photo.serial!=='Not found'?'<span class="ok">✓ From your account</span>':(S.photo?'<span class="ok" style="color:var(--warn)">Not found</span>':''))+'</div></div>'+
+        '<button class="btn btn-primary btn-block" id="identify" data-testid="button-identify" '+(S.photo?'':'disabled')+'>Identify part</button>';
+      $$('.ph-opt',b).forEach(function(x){x.addEventListener('click',function(){S.photo=PHOTOS[x.dataset.photo];renderPhone();});});
+      $('#identify').addEventListener('click',identify);
+    }
+  }
+  else {
+    title.textContent='Orders'; sub.textContent='Live status from your dealer';
+    var mine=farmerReqs();
+    var html='';
+    mine.forEach(function(r){
+      var st=farmerStatus(r);
+      html+='<div class="m-card order-card" data-testid="farmer-order-'+r.id+'"><div class="order-top" style="gap:10px;justify-content:flex-start"><div class="order-thumb">'+(r.img?'<img src="'+r.img+'" alt=""/>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--conn)" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>')+'</div><div style="flex:1;min-width:0"><b>'+esc(r.part)+' × '+r.qty+'</b><span>'+r.id+' · '+esc(r.machine)+'</span></div></div>'+
+        '<span class="pill '+st.pill+'" style="width:fit-content">'+esc(st.txt)+'</span>'+
+        '<div class="progress'+(st.warn?' warn':'')+'">'+[1,2,3,4].map(function(i){return '<i class="'+(i<=st.stage?'on':'')+'"></i>';}).join('')+'</div>'+
+        '<div class="progress-l"><span>Sent</span><span>Confirmed</span><span>Shipping</span><span>Ready</span></div>'+
+        '<div class="xs muted">'+esc(st.line)+'</div></div>';
+    });
+    html+='<div class="m-card order-card" data-testid="farmer-order-7715"><div class="order-top" style="gap:10px;justify-content:flex-start"><div class="order-thumb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--erp)" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/></svg></div><div style="flex:1;min-width:0"><b>Fuel filter × 2</b><span>ORD-7715 · MF 5713 · ordered Nov 17</span></div></div>'+
+      '<span class="pill '+(S.etaDone?'pill-ok':'pill-erp')+'" style="width:fit-content" id="eta-pill">'+(S.etaDone?'Backordered, now arriving Nov 21':'Backordered, ETA Nov 24')+'</span>'+
+      '<div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><div class="progress-l"><span>Sent</span><span>Confirmed</span><span>Shipping</span><span>Ready</span></div>'+
+      '<div class="mini-tl">'+(S.etaDone?'<div class="hl"><time>Today · automatic update</time>ETA moved up from Nov 24 to Nov 21. You were texted and emailed automatically.</div>':'')+
+      '<div><time>Nov 17, 8:41 AM</time>Backorder confirmed from AGCO warehouse</div><div><time>Nov 17, 8:40 AM</time>Dealer had none in stock, so the order went to AGCO</div></div></div>';
+    if(!mine.length) html='<div class="empty" style="padding:8px 4px 0;text-align:left">New requests you start will show up here.</div>'+html;
+    b.innerHTML=html;
+  }
+  $$('[data-screen-go]',b).forEach(function(x){x.addEventListener('click',function(){setScreen(x.dataset.screenGo);});});
+}
+
+function addReq(o){
+  S.seq++; var id='F-'+(2000+S.seq);
+  var r={id:id,mine:true,isNew:true,cust:'Hart Farms',status:'new',qty:1,qtyRaw:'1',t:fmt(clock),audit:[{t:fmt(clock),m:'Request received from the FarmerCore app.'}]};
+  for(var k in o) r[k]=o[k];
+  S.requests.unshift(r); S.sel=id; S.filter='all';
+  renderCounts(); return r;
+}
+function startFault(){
+  if(S.faultSent) return;
+  S.faultSent=true;
+  var r=addReq({src:'fault',machine:'MF 8S.245',serial:'MF8S-245-0042117',symptom:'DPF pressure out of range',code:'P203B',part:'DPF pressure sensor',partNo:'4762902M1',price:186,dealer:4,agco:26,conf:96});
+  log('farmer','Hart Farms tapped <b>Start parts request</b> from the fault alert. No phone call was needed.');
+  log('dealer','Request <b>'+r.id+'</b> arrived in the Hart Machinery queue with a 96% match. It meets the rules, so it can be reserved.');
+  step(1); renderPhone(); toast(r.id+' sent to Hart Machinery Co. Open the dealer desk to act on it.');
+}
+function identify(){
+  if(!S.photo) return;
+  S.scanning=true; renderPhone();
+  log('farmer','Hart Farms uploaded a photo of a <b>'+esc(S.photo.label.toLowerCase())+'</b> along with serial '+esc(S.photo.serial)+'.');
+  setTimeout(function(){
+    S.scanning=false; S.result=S.photo; renderPhone();
+    var p=S.result;
+    log('ai',(p.partNo==='—'?'No confident match for the photo. Top guess is <b>'+esc(p.part)+'</b>':'Suggested <b>'+esc(p.part)+' '+p.partNo+'</b>')+' at <b>'+p.conf+'% confidence</b>'+(p.conf<THRESH?'. That is below 80%, so a human must review it.':'.'));
+    log('erp','One stock check: dealer '+p.dealer+' on hand; AGCO warehouse '+p.agco+'.');
+    if(p.key==='belt'||p.key==='cyl') step(2);
+  },1500);
+}
+function sendPhoto(){
+  var p=S.result; if(!p||S.sentPhoto[p.key]) return;
+  S.sentPhoto[p.key]=true;
+  var r=addReq({src:'photo',img:p.img,machine:p.machine,serial:p.serial,symptom:p.symptom,part:p.part,partNo:p.partNo,price:p.price,dealer:p.dealer,agco:p.agco,conf:p.conf,alt:p.alt});
+  log('dealer','Request <b>'+r.id+'</b> arrived in the queue'+(p.conf<THRESH?' marked <b>Needs review</b> because the AI was only '+p.conf+'% sure.':'.'));
+  renderPhone(); toast(r.id+' sent to Hart Machinery Co.');
+}
+$('#sim-eta').addEventListener('click',function(){
+  if(S.etaDone) return; S.etaDone=true;
+  log('erp','AGCO warehouse system moved the ETA for <b>ORD-7715</b> (fuel filters) from Nov 24 to <b>Nov 21</b>.');
+  log('ai','Automatic update sent to Hart Farms by text and email. No dealer action was needed (AI acts alone because it\u2019s low risk).');
+  push('Order update · ORD-7715','Good news: your fuel filters now arrive Nov 21, 3 days early.');
+  this.disabled=true; this.lastChild.textContent='ETA update sent automatically';
+  step(5); S.unseen++; renderPhone();
+});
+
+/* ---------------- dealer desk ---------------- */
+function validQty(raw){
+  var s=String(raw==null?'':raw).trim();
+  if(s==='') return {ok:false,err:'Enter a quantity'};
+  if(!/^\d+$/.test(s)) return {ok:false,err:'Whole numbers only (1–5)'};
+  var v=+s; if(v<1) return {ok:false,err:'Must be at least 1'}; if(v>5) return {ok:false,err:'Max 5 per request'};
+  return {ok:true,v:v};
+}
+function cls(r){ // classification for open requests
+  if(r.status!=='new') return 'done';
+  if(r.conf<THRESH || r.qty>r.dealer) return 'review';
+  return 'ready';
+}
+function counts(){
+  var c={all:S.requests.length,ready:0,review:0,done:0,res:0,bo:0,esc:0,open:0};
+  S.requests.forEach(function(r){var k=cls(r);c[k]++; if(r.status==='new')c.open++; if(r.status==='reserved')c.res++; if(r.status==='backordered')c.bo++; if(r.status==='escalated')c.esc++;});
+  return c;
+}
+function renderCounts(){
+  var c=counts();
+  $('#nav-review-count').textContent=c.open;
+  ['all','ready','review','done'].forEach(function(k){$('#c-'+k).textContent=c[k];});
+  $('#k-open').textContent=c.open; $('#k-review').textContent=c.review; $('#k-res').textContent=c.res; $('#k-bo').textContent=c.bo; $('#k-esc').textContent=c.esc;
+}
+$$('.qf').forEach(function(b){b.addEventListener('click',function(){S.filter=b.dataset.f;renderDealer();});});
+
+function statusPill(r){
+  if(r.status==='reserved') return '<span class="pill pill-ok">Reserved</span>';
+  if(r.status==='backordered') return '<span class="pill pill-erp">AGCO order</span>';
+  if(r.status==='escalated') return '<span class="pill pill-neutral">Escalated</span>';
+  return cls(r)==='ready'?'<span class="pill pill-ok"><span class="dot"></span>Ready</span>':'<span class="pill pill-warn"><span class="dot"></span>Review</span>';
+}
+function confColor(c){return c>=THRESH?'var(--ok)':(c>=55?'var(--warn)':'var(--err)');}
+
+function renderDealer(){
+  renderCounts();
+  $$('.qf').forEach(function(b){b.classList.toggle('active',b.dataset.f===S.filter);});
+  var list=S.requests.filter(function(r){return S.filter==='all'||cls(r)===S.filter;});
+  var q=$('#q-list');
+  if(!list.length){q.innerHTML='<div class="empty">Nothing here right now.</div>';}
+  else q.innerHTML=list.map(function(r){
+    return '<button class="q-item'+(r.id===S.sel?' sel':'')+'" data-id="'+r.id+'" data-testid="queue-item-'+r.id+'">'+
+      '<span class="q-thumb">'+(r.img?'<img src="'+r.img+'" alt=""/>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9M7.8 16.2a6 6 0 0 1 0-8.4M19.1 4.9C23 8.8 23 15.2 19.1 19.1M16.2 7.8a6 6 0 0 1 0 8.4"/><circle cx="12" cy="12" r="2"/></svg>')+'</span>'+
+      '<span class="q-main"><span class="t">'+r.id+' · '+(r.src==='fault'?'Fault '+r.code:'Photo')+(r.isNew?' <span class="new-flag">New</span>':'')+'</span><span class="p" style="display:block">'+esc(r.part)+'</span><span class="e" style="display:block">'+esc(r.cust)+' · '+esc(r.machine)+'</span></span>'+
+      '<span class="q-right"><span class="q-conf" style="color:'+confColor(r.conf)+'">'+r.conf+'%</span>'+statusPill(r)+'</span></button>';
+  }).join('');
+  $$('.q-item',q).forEach(function(b){b.addEventListener('click',function(){S.sel=b.dataset.id;var r=find(S.sel);if(r)r.isNew=false;renderDealer(); if(window.innerWidth<1000) $('#detail').scrollIntoView({behavior:'smooth',block:'start'});});});
+  renderDetail();
+}
+function find(id){for(var i=0;i<S.requests.length;i++) if(S.requests[i].id===id) return S.requests[i]; return null;}
+
+function renderDetail(){
+  var d=$('#detail'), r=find(S.sel);
+  if(!r){d.innerHTML='<div class="empty" style="padding:60px">Select a request</div>';return;}
+  var open=r.status==='new', v=validQty(r.qtyRaw), qtyOk=v.ok;
+  var confOk=r.conf>=THRESH, stockOk=qtyOk&&r.qty<=r.dealer, agcoOk=qtyOk&&r.qty<=r.agco;
+  var canReserve=open&&qtyOk&&confOk&&stockOk;
+  var canOrderAgco=open&&qtyOk&&confOk&&!stockOk&&agcoOk;
+  var canEsc=open&&qtyOk;
+  var rule;
+  if(!open){
+    var m={reserved:'Reserved for pickup. The farmer was notified automatically.',backordered:'Ordered from the AGCO warehouse. The farmer gets automatic ETA updates.',escalated:'Sent to a parts specialist for human identification. Actions are locked.'}[r.status];
+    rule='<div class="rule done"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><b>Decision recorded</b>'+m+'</div></div>';
+  } else if(!qtyOk){
+    rule='<div class="rule warn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div><b>Fix the quantity first</b>'+v.err+'.</div></div>';
+  } else if(!confOk){
+    rule='<div class="rule warn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div><b>AI recommends, human approves</b>The AI is '+r.conf+'% confident, which is below the 80% minimum. Reserving is blocked. Escalate to a parts specialist to identify the part.</div></div>';
+  } else if(!stockOk){
+    rule='<div class="rule info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/></svg><div><b>Not enough dealer stock</b>You have '+r.dealer+' on hand and '+r.qty+' requested. The AGCO warehouse has '+r.agco+'. Order from AGCO (the farmer gets auto ETA updates) or escalate.</div></div>';
+  } else {
+    rule='<div class="rule ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><div><b>Meets the rules, ready to reserve</b>Confidence '+r.conf+'% is at or above 80%, and '+r.qty+' of '+r.dealer+' are in stock. Reserving notifies the farmer automatically.</div></div>';
+  }
+  var ev = r.src==='photo'
+    ? '<div class="evidence"><img src="'+r.img+'" alt="Farmer photo"/><span class="lbl">Farmer photo</span></div>'
+    : '<div class="evidence fault"><span class="pill" style="background:rgba(255,255,255,.14);color:#9fe3e8;width:fit-content">AGCO Connect</span><div class="code">'+r.code+'</div><div class="d">'+esc(r.symptom)+'</div><div class="tel"><div>Engine hrs<b>1,284</b></div><div>Opt-in<b>Yes</b></div><div>Reported<b>'+r.t+'</b></div><div>Location<b>Field 7</b></div></div></div>';
+  d.innerHTML=
+    '<div class="dt-head"><div style="min-width:0"><div class="id">'+r.id+' · '+(r.src==='fault'?'<span class="pill pill-conn">Fault-triggered</span>':'<span class="pill pill-brand">Photo request</span>')+(r.mine?'<span class="pill pill-neutral">From FarmerCore app</span>':'')+'</div>'+
+      '<h3>'+esc(r.part)+'</h3><div class="cust">'+esc(r.cust)+' · '+esc(r.machine)+' · received '+r.t+'</div></div>'+statusPill(r)+'</div>'+
+    '<div class="dt-body"><div>'+ev+'<div class="ev-meta"><div><span>Serial</span><b>'+esc(r.serial)+'</b></div><div><span>Symptom</span><b>'+esc(r.symptom)+'</b></div><div><span>Source</span><b>'+(r.src==='fault'?'Connected tractor':'FarmerCore photo')+'</b></div></div></div>'+
+    '<div>'+
+      '<div class="blk"><div class="blk-t"><span class="pill pill-ai">AI Parts Assistant</span>Suggested part</div><div class="ai-sug">'+ring(r.conf,72)+'<div style="min-width:0"><div class="nm">'+esc(r.part)+'</div><div class="no">'+(r.partNo==='—'?'No part number, no confident match':'Part '+r.partNo+' · genuine AGCO')+'</div></div><div class="pr">'+money(r.price)+'</div></div>'+
+        (r.alt?'<div class="alt"><b>Alternative flagged:</b> '+esc(r.alt.part)+' ('+r.alt.partNo+', '+money(r.alt.price)+'). Confirm which one fits.</div>':'')+'</div>'+
+      '<div class="blk"><div class="blk-t"><span class="pill pill-erp">AGCO ERP</span>Availability (one check)</div><div class="inv">'+
+        '<div class="inv-box'+(r.dealer===0?' zero':'')+'"><div class="k">Hart Machinery Co.</div><div class="v tnum">'+r.dealer+'</div><div class="s">'+(r.dealer?'On the shelf · pickup today':'None on hand')+'</div></div>'+
+        '<div class="inv-box"><div class="k">AGCO warehouse</div><div class="v tnum">'+r.agco+'</div><div class="s">2-day transfer</div></div></div>'+
+        '<div class="one-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>Dealer and AGCO stock checked together, so there\u2019s no second system to look up</div></div>'+
+      '<div class="blk"><div class="blk-t">Decision</div>'+rule+
+        '<div class="act-row" style="margin-top:14px"><div class="qty"><label for="qty-in">Qty</label><div class="stepper'+(qtyOk?'':' bad')+'"><button id="q-dec" aria-label="Decrease" '+(!open||(qtyOk&&r.qty<=1)?'disabled':'')+'>−</button><input id="qty-in" inputmode="numeric" value="'+esc(r.qtyRaw)+'" '+(open?'':'disabled')+' data-testid="input-qty" aria-label="Quantity to reserve"/><button id="q-inc" aria-label="Increase" '+(!open||(qtyOk&&r.qty>=5)?'disabled':'')+'>+</button></div><div class="qty-err" id="qty-err">'+(qtyOk?'':v.err)+'</div></div>'+
+        '<div class="act-btns">'+
+          (canOrderAgco?'<button class="btn btn-erp" id="a-agco" data-testid="button-order-agco">Order from AGCO warehouse</button>':'<button class="btn btn-ok" id="a-res" data-testid="button-reserve" '+(canReserve?'':'disabled')+'>'+(open?'Reserve & notify farmer':'Locked')+'</button>')+
+          '<button class="btn btn-warn" id="a-esc" data-testid="button-escalate" '+(canEsc?'':'disabled')+'>'+(open?'Escalate to specialist':'Locked')+'</button>'+
+        '</div></div></div>'+
+      '<div class="blk"><div class="blk-t">Audit log</div><div class="audit">'+(r.audit.length?r.audit.slice().reverse().map(function(a){return '<div><time>'+a.t+'</time><span>'+esc(a.m)+'</span></div>';}).join(''):'<div><time>'+r.t+'</time><span>Request received. Every dealer override of an AI suggestion is logged for weekly review.</span></div>')+'</div></div>'+
+    '</div></div>';
+  animRings(d);
+  if(open){
+    var inp=$('#qty-in');
+    inp.addEventListener('input',function(){r.qtyRaw=inp.value;var vv=validQty(inp.value);if(vv.ok)r.qty=vv.v;var pos=inp.selectionStart;renderDealer();var ni=$('#qty-in');if(ni){ni.focus();try{ni.setSelectionRange(pos,pos);}catch(e){}}});
+    $('#q-dec').addEventListener('click',function(){if(r.qty>1){r.qty--;r.qtyRaw=String(r.qty);renderDealer();}});
+    $('#q-inc').addEventListener('click',function(){if(r.qty<5){r.qty++;r.qtyRaw=String(r.qty);renderDealer();}});
+    var ar=$('#a-res'); if(ar) ar.addEventListener('click',function(){act(r,'reserved');});
+    var ag=$('#a-agco'); if(ag) ag.addEventListener('click',function(){act(r,'backordered');});
+    $('#a-esc').addEventListener('click',function(){act(r,'escalated');});
+  }
+}
+function act(r,to){
+  if(r.status!=='new') return;
+  var v=validQty(r.qtyRaw); if(!v.ok) return;
+  if(to==='reserved' && !(r.conf>=THRESH && r.qty<=r.dealer)) return;
+  if(to==='backordered' && !(r.conf>=THRESH && r.qty>r.dealer && r.qty<=r.agco)) return;
+  r.status=to; r.isNew=false; var t=tick(2);
+  if(to==='reserved'){ r.dealer-=r.qty; r.audit.push({t:t,m:'Dilan D. reserved '+r.qty+' × '+r.part+'. Farmer notified.'});
+    log('dealer','Dilan D. <b>reserved '+r.qty+' × '+esc(r.part)+'</b> for '+esc(r.cust)+' ('+r.id+').');
+    log('erp','Dealer stock decremented. Order created in ERP.');
+    if(r.mine){log('farmer','Push sent to Hart Farms: "Your '+esc(r.part)+' is ready for pickup today."');push('Ready for pickup','Your '+r.part+' is reserved at Hart Machinery Co. Pick it up today.');S.unseen++;}
+    toast('Reserved. '+(r.mine?'Hart Farms was notified on their phone.':r.cust+' was notified.'));
+  } else if(to==='backordered'){ r.eta='Nov 20'; r.audit.push({t:t,m:'Ordered '+r.qty+' from AGCO warehouse, ETA Nov 20.'});
+    log('dealer','Dilan D. approved an <b>AGCO warehouse order</b> for '+r.id+' because dealer stock was short.');
+    log('erp','Warehouse order placed, ETA <b>Nov 20</b>. Automatic farmer updates are on.');
+    if(r.mine){push('Order placed','Your part ships from AGCO and arrives Nov 20. We\u2019ll text you if that changes.');S.unseen++;}
+    toast('Ordered from AGCO. The farmer gets automatic ETA updates.');
+  } else { r.audit.push({t:t,m:'Escalated to parts specialist: '+(r.conf<THRESH?'AI confidence '+r.conf+'% below 80%.':'dealer review requested.')});
+    log('dealer','Dilan D. <b>escalated '+r.id+'</b> to a parts specialist'+(r.conf<THRESH?' (AI '+r.conf+'% confident, under the 80% minimum)':'')+'. The override is logged for weekly review.');
+    if(r.mine){push('We\u2019re on it','A parts specialist is confirming the exact part for your '+r.machine+'.');S.unseen++;}
+    toast('Escalated. A human specialist will confirm the part.');
+  }
+  // guided steps
+  var mineDone=S.requests.filter(function(x){return x.mine&&x.status!=='new';});
+  var resF=mineDone.some(function(x){return x.status==='reserved'&&x.src==='fault';});
+  var escP=mineDone.some(function(x){return x.status==='escalated'&&x.src==='photo';});
+  if(resF&&escP) step(3);
+  if(mineDone.length) step(4);
+  renderDealer(); renderPhone();
+}
+
+$('#reset-demo').addEventListener('click',function(){
+  var v=S.view; init(); S.view=v; var b=$('#sim-eta'); b.disabled=false; b.lastChild.textContent='Simulate: warehouse moves up ETA';
+  renderAll(); toast('Demo reset.');
+});
+function renderAll(){renderFeed();renderGuide();renderPhone();renderDealer();}
+init(); renderAll();
+})();
+</script>
+</body>
+</html>
